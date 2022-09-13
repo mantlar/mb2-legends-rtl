@@ -1,0 +1,44 @@
+ClassInfo
+{
+	name			"ass_gran"
+	weapons			WP_BLASTER_PISTOL|WP_MELEE|WP_FRAG_NADE|WP_SONIC_NADE
+	attributes		MB_ATT_FRAGS,3|MB_ATT_SONIC_DETONATOR,3|MB_ATT_ARMOR,3|MB_ATT_PISTOL,1|MB_ATT_FUEL,1|MB_ATT_JETPACK
+	holdables		HI_CLOAK
+	maxarmor		70
+	modelscale 		1
+	speed			1.2
+	model			"gran"
+	skin			"default"
+	uishader		"models/players/gran/mb2_icon_default"
+	MBClass			MB_CLASS_MANDALORIAN
+	classNumberLimit	2
+	headSwapModel "boba_fett"
+	headSwapSkin "jetpackonly"
+	customred		0.78
+	customgreen		0.57
+	customblue		0.5
+	jetpackThrustEffect	"null"
+	jetpackIdleEffect	"null"
+	jetpackThrustSound	"sound/jetpack/thrust"
+	jetpackIdleSound	"sound/jetpack/idle"
+	jetpackStartSound	"sound/jetpack/ignite"
+	jetpackJetTag		"*torso"
+	jetpackJet2Tag		"*torso"
+}
+
+description	"Gran
+
+Weapons:
+Pistol (1)
+Frag Grenades (3)
+Sonic Detonators (3)
+
+Abilities:
+Jetpack
+Cloak
+
+Gran were a sentient humanoid species native to the planet Malastare. Identifiable by their three eyes and goat-like snouts, Gran also had small antennae-like nubs on the tops of their head and thick, bulky hands.
+
+"
+
+//noob

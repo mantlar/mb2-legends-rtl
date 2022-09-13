@@ -1,0 +1,66 @@
+//Siege class def file.
+
+ClassInfo
+{
+	name				"JT_General"
+	weapons				WP_DEMP2|WP_MELEE
+	attributes			MB_ATT_PISTOL,3|MB_ATT_AMMO,3|MB_ATT_HEALING,2|MB_ATT_ARMOUR,3|MB_ATT_STAMINA,3|MB_ATT_DEXTERITY,3|MB_ATT_FLIPKICK
+	forcepowers			FP_SEE,1
+	maxhealth			100
+	maxarmor			100
+	forcepool			25
+	model				"clonetrooper_p2"
+	skin				"deviss_rgb"
+	uishader			"gfx/hud/fa_icons/mb2_icon_arcp2_deviss_blue"
+	customred			0.120
+	customgreen			0.275
+	customblue			0.474
+	MBClass				MB_CLASS_ARCTROOPER
+	speed				1.05
+	classNumberLimit	1
+	classflags 			CFL_STATVIEWER|CFL_AKIMBOPISTOL3
+}
+
+WeaponInfo0
+{
+	WeaponToReplace		WP_DEMP2
+	WeaponBasedOff		WP_DEMP2
+	NewWorldModel		"models/weapons2/dc-17/dc-17_w.glm"
+	NewViewModel		"models/weapons2/dc-17/dc-17.md3"
+	Icon				"gfx/hud/w_icon_dc-17_dual"
+	WeaponName			"Dual Clone Pistols"
+	customAmmo			800		// 100 shots
+	clipSize			60		// 8 shots with regen
+}
+
+ForceInfo0
+{
+	ForceToReplace	FP_SEE
+	Icon		"gfx/forcepowers/radar"
+	ForcePowerName	"Radar"
+}
+
+description	"Commander Appo
+
+Weaponry:
+Heavy DC-17 Pistols (4)
+
+Items:
+Armour		(3)
+Ammo		(3)
+Infrared Sensors (stat-seeing)
+
+Abilities:
+Dexterity	(3)
+Stamina		(3)
+Healing		(2)
+Radar		(1)
+Flipkick
+
+Commander Appo,otherwise known as Clone Commander CC-1119.
+
+Vader considered him one of the most elite of all commanders. 
+
+The ARC Generals were given the very best training, and often gifted with a greater level of independance in their genetic programming than other clones.  
+
+The Generals were responsible for the direction of large battalions of Clones, and in some cases even chose names for themselves, working side by side with the Jedi as individuals."

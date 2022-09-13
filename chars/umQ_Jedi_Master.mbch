@@ -1,0 +1,35 @@
+
+//Siege class def file.
+
+ClassInfo
+{
+	name			"umQ_Jedi_Master"
+	weapons			WP_SABER|WP_MELEE
+	saber1			dual_5
+	sabercolor		3
+	maxhealth		100
+	maxarmor		0
+	startarmor		0
+	saberstyle		ss_staff
+	forcepowers		FP_SABER_OFFENSE,3|FP_SABER_DEFENSE,3|FP_LEVITATION,3
+	attributes		MB_ATT_FORCEFOCUS,1|MB_ATT_FORCEBLOCK,2
+	model			"jedi"
+	skin			"master"
+	uishader		"models/players/jedi/mb2_icon_master"
+	MBClass			MB_CLASS_JEDI
+	classNumberLimit	1
+
+}
+
+description	"Jedi Master
+
+Double-Bladed Lightsaber
+Saber Offense 3
+Saber Defense 3
+Force Jump 3
+Force Block 2
+
+"
+
+
+

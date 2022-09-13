@@ -1,0 +1,48 @@
+//Siege class def file.
+
+ClassInfo
+{
+	name				"RC_rep_Security"
+	weapons				WP_REPEATER|WP_DEMP2|WP_MELEE|WP_SONIC_NADE
+	attributes			MB_ATT_RESPAWNS,1|MB_ATT_PISTOL,2|MB_ATT_CLONERIFLE,2|MB_ATT_CLONEBLOBS,1|MB_ATT_ARMOUR,3|MB_ATT_AMMO,3|MB_ATT_ASSEMBLE,1|MB_ATT_TRACKING_DART,1|MB_ATT_SONIC_DETONATOR,1
+	maxhealth			80
+	maxarmor			25
+	model				"clonetrooper_p2" 				//this is optional, if it's here it forces the model to this.
+	skin				"rc_Security"					//this is optional, if it's here it forces the skin to this.
+	uishader			"gfx/hud/FA_icons/mb2_icon_rc_Security"
+	customred			0.576
+	customgreen			0.521
+	customblue			0.427
+	MBClass				MB_CLASS_ARCTROOPER
+	classNumberLimit	1
+	classflags			CFL_FASTHACKING
+}
+
+WeaponInfo0
+{
+	WeaponToReplace		WP_REPEATER
+	WeaponBasedOff		WP_REPEATER
+	NewWorldModel		"models/weapons2/dc-15_ext/dc-15_ext_w.glm"
+	NewViewModel		"models/weapons2/dc-15_ext/dc-15_ext.md3"
+	Icon				"gfx/hud/w_icon_clonerifle_blobs"
+	WeaponName			"DC-15A Clone Rifle"
+}
+
+description	"Security Clone
+
+Weaponry:
+Clone Pistol				(2)
+DC-15A Clone Rifle			(2)
+Rifle Explosive Rounds		(1)
+Tracking Darts				(1)
+Sonic Detonator				(1)
+
+Abilities:
+Reinforcements		(1)
+Tech-Affinity
+
+Equipment:
+Armour		(3)
+Ammo		(3)
+
+"
