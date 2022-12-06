@@ -1,9 +1,0 @@
-//Siege team definition file.
-
-name "rt2_blu"
-
-Classes
-{
-	class1		"rt2_ball_b"
-	class2		"rt2_racket_b"
-}
