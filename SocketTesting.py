@@ -12,6 +12,13 @@ from zipfile import ZipFile
 
 pk3s_to_open = ["03_MovieGameMappack.pk3", "mb2_cmp_assets3.pk3", "mb2_pb_assets2.pk3", "mb2_um_assets3.pk3", "MBAssets3.pk3"]
 MB2_FOLDER_PATH = r"C:\Program Files (x86)\Steam\steamapps\common\Jedi Academy\GameData\MBII\\"
+serverTips = [
+  "Type '^2rtl^6' or '^2!rtl^6' in chat to vote to change the current Full Authentic teams!",
+  "To search for a Full Authentic team, type '^2!searchteams <query>^6' in chat.",
+  "To view a list of all Full Authentic teams, type '^2!teamlist <page>^6' in chat.",
+  "To nominate a team, type '^2!nomteam <teamname> <red/blue>^6' in chat. You can only have 1 nomination for each side.",
+  "This server also runs the ^2RTV^6 plugin! Type rtv or !rtv to vote to change the current map!"
+]
 
 def get_team_names():
   teams = []
@@ -26,6 +33,7 @@ def get_team_names():
   return teams
 
 MASTER_TEAM_LIST = get_team_names()
+VOTE_THRESHOLD = 0.5
 
 class Player(object):
   def __init__(self, clientID, name, address):
@@ -39,6 +47,7 @@ class Player(object):
     self.redNomIdx = None
     self.blueNomination = None
     self.blueNomIdx = None
+    self.userinfo = {}
     
     
 class RTL(object):
@@ -58,6 +67,7 @@ class RTL(object):
     self.voteTimeRemaining = 0
     self.playerList = {}
     self.currentMap = None
+    self.doChangeNextRound = True
     self.changeNextRound = False
     self.nominationWinner = None
 
@@ -100,8 +110,8 @@ class RTL(object):
   def refreshChoices(self):
     self.t1Choices = []
     self.t2Choices = []
-    self.t1ToSet = None
-    self.t2ToSet = None
+    # self.t1ToSet = None
+    # self.t2ToSet = None
 
   def parseLine(self, line):
     lineParse = line.split()
@@ -111,11 +121,14 @@ class RTL(object):
       senderName = lineParse[2][1:].strip()
       print("LOG: %s (client %s) voted RTL" % (senderName, sender))
       # if self.playerList[sender] and not self.playerList[sender].isRtl and self.playerList[sender].name == senderName and not self.voting:
-      if self.playerList[sender] and not self.playerList[sender].isRtl and not self.voting:
-        self.playerList[sender].isRtl = True
-        self.rcon.svsay("^6[RTL]^7: %s^7 wants to change Legends teams! (%s/%d)" % (senderName, [self.playerList[x].isRtl for x in self.playerList].count(True), max(ceil(len(self.playerList) * 2/3), 1)))
-        if [self.playerList[x].isRtl for x in self.playerList].count(True) >= max(ceil(len(self.playerList) * 2/3), 1):
-          self.startVote(1)
+      if self.playerList[sender]and not self.voting and not self.changeNextRound:
+        if not self.playerList[sender].isRtl:
+          self.playerList[sender].isRtl = True
+          self.rcon.svsay("^6[RTL]^7: %s^7 wants to change Legends teams! (%s/%d)" % (senderName, [self.playerList[x].isRtl for x in self.playerList].count(True), max(ceil(len(self.playerList) * VOTE_THRESHOLD), 1)))
+          if [self.playerList[x].isRtl for x in self.playerList].count(True) >= max(ceil(len(self.playerList) * VOTE_THRESHOLD), 1):
+            self.startVote(1)
+        else:
+          self.rcon.svsay("^6[RTL]^7: %s^7 already wants to change Legends teams!" % (senderName))
     elif re.match('\d+:', lineParse[0]) and lineParse[-1].lower() == "\"unrtl\"" or lineParse[-1].lower() == "\"!unrtl\"":
       lineParse = line.split(':')
       sender = lineParse[0]
@@ -128,9 +141,9 @@ class RTL(object):
       sender = lineParse[0][:-1]
       self.playerList[sender].voteNum = lineParse[-1][2]
       self.playerList[sender].isVoting = True
-    elif re.match('\d+:', lineParse[0]) and re.match('!nominate', lineParse[-3].strip("\"")):
+    elif re.match('\d+:', lineParse[0]) and re.match('!nomteam', lineParse[-3].strip("\"")):
       lineParse = line.split(":")
-      command = re.match('!nominate (.*)', lineParse[-1][1:].strip("\"")).group().split()
+      command = re.match('!nomteam (.*)', lineParse[-1][1:].strip("\"")).group().split()
       if len(command) < 3:
           print("invalid command")
       elif command[1] in MASTER_TEAM_LIST:
@@ -143,10 +156,10 @@ class RTL(object):
             elif nomName in self.t1Choices:
               self.rcon.say("^6[RTL]^7: Team already nominated: %s" % (nomName))
             elif self.playerList[lineParse[0]].redNomination != None:
-              
-              self.rcon.say("^6[RTL]^7: User already nominated team: %s" % (self.playerList[lineParse[0]].redNomination))
+              self.t1Choices[self.t1Choices.index(self.playerList[lineParse[0]].redNomination)] = nomName
+              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 changed their nomination for ^1red^7 to {nomName}!")
             else:
-              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 nominated team {nomName} for red")
+              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 nominated team {nomName} for ^1red^7")
               self.playerList[lineParse[0]].redNomination = nomName
               self.t1Choices.append(nomName)
           elif nomTeam == "blue":
@@ -155,13 +168,14 @@ class RTL(object):
             elif nomName in self.t2Choices:
               self.rcon.say("^6[RTL]^7: Team already nominated: %s" % (nomName))
             elif self.playerList[lineParse[0]].blueNomination != None:
-              self.rcon.say("^6[RTL]^7: User already nominated team: %s" % (self.playerList[lineParse[0]].blueNomination))
+              self.t1Choices[self.t1Choices.index(self.playerList[lineParse[0]].blueNomination)] = nomName
+              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 changed their nomination for ^5blue^7 to {nomName}!")
             else:
-              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 nominated team {nomName} for blue")
+              self.rcon.say(f"^6[RTL]^7: {self.playerList[lineParse[0]].name}^7 nominated team {nomName} for ^5blue^7")
               self.playerList[lineParse[0]].blueNomination = nomName
               self.t2Choices.append(nomName)
           else:
-            self.rcon.say("^6[RTL]^7: invalid team (not red/blue)")
+            self.rcon.say("^6[RTL]^7: invalid team (not ^1red^7/^5blue^7)")
         else:
           self.rcon.say("^6[RTL]^7: invalid team name: %s" % (nomName))
       else:
@@ -198,15 +212,6 @@ class RTL(object):
       else:
         print("WARNING: ATTEMPT TO REMOVE INVALID ID %s FROM DICTIONARY" % (playerID))
     elif lineParse[0] == "InitGame:":
-      lineParse = line.split('\\')
-      lineParse = lineParse[1:]
-      if self.changeNextRound:
-        self.changeNextRound = False
-        self.rcon.svsay("^6[RTL]^7: Changing teams, please wait...")
-        self.rcon.changeTeams(self.t1ToSet, self.t2Choices[self.nominationWinner - 1], self.currentMap)
-        self.populatePlayers()
-        self.resetVotes()
-        self.refreshChoices()
       if not 'mapname' in lineParse:
         currentMap = self.rcon.getCurrentMap()
       else:
@@ -218,6 +223,22 @@ class RTL(object):
         self.resetVotes()
         self.refreshChoices()
         self.voting = False
+        self.changeNextRound = False
+      lineParse = line.split('\\')
+      lineParse = lineParse[1:]
+      if self.doChangeNextRound and self.changeNextRound:
+        self.changeNextRound = False
+        self.changeTeams(self.t1ToSet, self.t2Choices[self.nominationWinner - 1])
+
+    elif lineParse[0] == "ClientUserinfoChanged:":
+      playerID = lineParse[1]
+      playerObject = self.playerList[playerID]
+      vars = ['n'] + line.split('\\')[1:]   # this is hacky as shit but so is the rest of the script
+      for i in range(0, len(vars), 2):
+        playerObject.userinfo[vars[i]] = vars[i+1]
+      if playerObject.name != playerObject.userinfo["n"]:
+        print("LOG: DETECTED NAME CHANGE on client %s (from %s to %s)" % (playerID, playerObject.name, playerObject.userinfo["n"]))
+        playerObject.name = playerObject.userinfo["n"]
 
   def startVote(self, team):
     # reset the players' voting flags
@@ -266,6 +287,14 @@ class RTL(object):
       self.playerList[i].redNomination = None
       self.playerList[i].blueNomination = None
 
+  def changeTeams(self, t1, t2):
+    self.t1ToSet = None
+    self.t2ToSet = None
+    self.rcon.svsay("^6[RTL]^7: Changing teams, please wait...")
+    self.rcon.changeTeams(t1, t2, self.currentMap)
+    self.populatePlayers()
+    self.resetVotes()
+    self.refreshChoices()
 
   def start(self):
     self.rcon.say("^6[RTL]^7: Initializing Rock The Legends...")
@@ -303,14 +332,22 @@ class RTL(object):
         self.nominationWinner = int(self.nominationWinner)
         if self.startVote1:
           self.rcon.svsay("^6[RTL]^7: Voting complete!")
-          self.rcon.svsay("^6[RTL]^7: Switching ^1Red^7 Team to %s next round!" % (self.t1Choices[self.nominationWinner - 1]))
+          if self.doChangeNextRound:
+            self.rcon.svsay("^6[RTL]^7: Switching ^1Red^7 Team to %s next round!" % (self.t1Choices[self.nominationWinner - 1]))
+          else:
+            self.rcon.svsay("^6[RTL]^7: Switching ^1Red^7 Team to %s!" % (self.t1Choices[self.nominationWinner - 1]))
           self.t1ToSet = self.t1Choices[self.nominationWinner - 1]
           self.startVote(2)
         elif self.startVote2:
           self.voting = False
           self.rcon.svsay("^6[RTL]^7: Voting complete!")
-          self.rcon.svsay("^6[RTL]^7: Switching ^5Blue^7 Team to %s next round!" % (self.t2Choices[self.nominationWinner - 1]))
-          self.changeNextRound = True
+          self.t2ToSet = self.t2Choices[self.nominationWinner - 1]
+          if self.doChangeNextRound:
+            self.rcon.svsay("^6[RTL]^7: Switching ^5Blue^7 Team to %s next round!" % (self.t2ToSet))
+            self.changeNextRound = True
+          else:
+            self.rcon.svsay("^6[RTL]^7: Switching ^5Blue^7 Team to %s!" % (self.t2ToSet))
+            self.changeTeams(self.t1ToSet, self.t2ToSet)
           
       elif self.voting and self.voteTimeRemaining % 30 == 0 and self.voteTimeRemaining != self.voteTime and self.voteTimeRemaining != 0:
         # self.voteStartTime = floor(time())
@@ -322,7 +359,9 @@ class RTL(object):
         self.voteTimeRemaining = self.voteTime - floor(time() - self.voteStartTime)
         if all([self.playerList[x].isVoting for x in self.playerList]):
           self.voteTimeRemaining = 0
-      
+      # Server announcements
+      if floor(time()) % 300 == 0:
+        self.rcon.svsay("Tip: ^6%s" % (choice(serverTips)))
           
     
   
@@ -450,6 +489,12 @@ class Rcon(object):
 
 
 if __name__ == "__main__":
-  rcon = Rcon(("192.168.1.87", 29070), "192.168.1.87", "fuckmylife")
-  rtlInstance = RTL(rcon)
-  rtlInstance.start()
+  while True:
+    try:
+      rcon = Rcon(("192.168.1.87", 29070), "192.168.1.87", "fuckmylife")
+      rtlInstance = RTL(rcon)
+      rtlInstance.start()
+    except KeyboardInterrupt:
+      exit(2)
+    # except Exception as e:
+    #   print(f"WARNING: Unexpected error occurred {e}, attempting to restart RTL...")
