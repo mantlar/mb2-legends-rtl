@@ -207,7 +207,7 @@ class RTL(object):
     elif lineParse[0] == "ClientDisconnect:":
       playerID = lineParse[1]
       print("LOG: Player with ID %s disconnected" % (playerID))
-      if self.playerList[playerID]:
+      if playerID in self.playerList:
         del self.playerList[playerID]
       else:
         print("WARNING: ATTEMPT TO REMOVE INVALID ID %s FROM DICTIONARY" % (playerID))
