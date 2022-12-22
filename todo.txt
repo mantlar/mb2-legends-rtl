@@ -1,0 +1,5 @@
+fix teamlist not working with non-integer
+make alias for teamslist, listteams, teamnom
+fix nomination during voting
+make shorthand r/b for red/blue in nomteam
+make it so you can search for team names using the map name (something like !mapteams <mapname>); use the .siege file in assets3/maps/

@@ -31,6 +31,33 @@ def get_team_names():
   return teams
 
 MASTER_TEAM_LIST = get_team_names()
+
+def getMapTeams():
+  teams = {}
+  for i in pk3s_to_open:
+    with ZipFile(MB2_FOLDER_PATH + i, "r") as zip:
+      for name in zip.namelist():
+        if name.lower().startswith("maps/"):
+          newMap = Map()
+          newMap.name = name[5:].removesuffix(".siege")
+          side = 0
+          a = zip.open(name)
+          for line in a.readlines():
+            line = line.decode("UTF-8", "ignore").strip()
+            if line.lower().startswith("useteam"):
+              if side == 0:
+                side += 1
+                lineParse = line.replace("\"", "").split()
+                newMap.redTeam = lineParse[1]
+              else:
+                lineParse = line.replace("\"", "").split()
+                newMap.blueTeam = lineParse[1]
+      
+          teams[newMap.name] = newMap
+  return teams
+
+MAP_LIST = getMapTeams()
+
 VOTE_THRESHOLD = 0.5
 
 class Player(object):
@@ -46,8 +73,15 @@ class Player(object):
     self.blueNomination = None
     self.blueNomIdx = None
     self.userinfo = {}
-    
-    
+
+
+class Map(object):
+  def __init__(self):
+    self.name = None
+    self.redTeam = None
+    self.blueTeam = None
+
+
 class RTL(object):
   def __init__(self, rconObject, voteTime=None):
     self.rcon: Rcon = rconObject
@@ -138,6 +172,15 @@ class RTL(object):
     return False
         
 
+  def mapTeams(self, mapName):
+    for i in MAP_LIST:
+      if i.lower() == mapName.lower():
+        self.rcon.say("^6[RTL]^7: %s: ^1Red^7=%s; ^5Blue^7=%s" % (mapName, MAP_LIST[i].redTeam, MAP_LIST[i].blueTeam))
+        return True
+    self.rcon.say("^6[RTL]^7: map not found")
+    return False
+
+
   def populatePlayers(self):
     """ Gets the players from the server's current status """
     playerList, currentMap = self.rcon.status()
@@ -193,6 +236,8 @@ class RTL(object):
         self.rcon.svsay("^6[RTL]^7: Invalid page index")
     elif re.match('\d+:', lineParse[0]) and (lineParse[-2].strip("\"") == '!searchteam' or lineParse[-2].strip("\"") == '!searchteams'):
       self.searchTeams(lineParse[-1].strip("\""))
+    elif re.match('\d+:', lineParse[0]) and (lineParse[-2].strip("\"") == '!mapteams'):
+      self.mapTeams(lineParse[-1].strip("\""))
     
     elif lineParse[0] == "ClientConnect:":
       regex = re.escape(line)
