@@ -1,3 +1,6 @@
+# Rock The Legends, version 0.3
+# You need to change IP_GOES_HERE in main() to the server IP
+
 from math import floor, ceil
 import re
 from socket import (socket, AF_INET, SOCK_STREAM, SOCK_DGRAM, SHUT_RDWR, gethostbyname_ex,
@@ -14,7 +17,8 @@ serverTips = [
   "To view a list of all Full Authentic teams, type '^2!teamlist <page>^6' in chat.",
   "To nominate a team, type '^2!nomteam <teamname> <red/blue>^6' in chat. You can only have 1 nomination for each side.",
   "This server also runs the ^2RTV^6 plugin! Type ^2rtv^6 or ^2!rtv^6 to vote to change the current map!",
-  "To get a specific map's FA teams, type '^2!mapteams <mapname>^6' in chat."
+  "To get a specific map's FA teams, type '^2!mapteams <mapname>^6' in chat.",
+  "RTL has a Discord! The invite code is ^23WmyjexHKC^6!"
 ]
 
 def get_team_names():
@@ -633,7 +637,7 @@ class Rcon(object):
       if lineSplit != []:
         newPlayerID = lineSplit[0].decode('UTF-8')
         newPlayerName = b''.join([x + b' ' for x in lineSplit[3:-4]])
-        newPlayerName = newPlayerName.decode('UTF-8')[:-1].strip()
+        newPlayerName = newPlayerName.decode('UTF-8', "ignore")[:-1].strip()
         newPlayerAddress = lineSplit[-3].decode('UTF-8')  
         newPlayer = Player(newPlayerID, newPlayerName, newPlayerAddress)
         players.append(newPlayer)
@@ -643,7 +647,7 @@ class Rcon(object):
 if __name__ == "__main__":
   while True:
     try:
-      rcon = Rcon(("192.168.1.118", 29070), "192.168.1.118", "fuckmylife")
+      rcon = Rcon(("192.168.50.1", 29070), "192.168.50.1", "fuckmylife")
       rtlInstance = RTL(rcon, voteTime=120)
       rtlInstance.start()
     except KeyboardInterrupt:
