@@ -5,7 +5,7 @@ from math import floor, ceil
 import re
 from socket import (socket, AF_INET, SOCK_STREAM, SOCK_DGRAM, SHUT_RDWR, gethostbyname_ex,
                     gaierror, timeout as socketTimeout, error as socketError)
-from time import time, sleep
+from time import time, sleep, ctime
 from random import choice
 from zipfile import ZipFile
 
@@ -123,6 +123,8 @@ class RTL(object):
     self.t2Noms = []
     self.t1ToSet = None
     self.t2ToSet = None
+    self.currentTeam1 = None
+    self.currentTeam2 = None
     self.currentVote = None    
     self.voteTime = voteTime if voteTime else 60
     self.toSeek = 0   # place to seek to when reading log file, done so we only read new lines
@@ -233,7 +235,7 @@ class RTL(object):
       lineParse = line.split(':')
       sender = lineParse[0]
       senderName = lineParse[2][1:].strip()
-      print("LOG: %s (client %s) voted RTL" % (senderName, sender))
+      print("%s LOG: %s (client %s) voted RTL" % (ctime(time()), senderName, sender))
       # if self.playerList[sender] and not self.playerList[sender].isRtl and self.playerList[sender].name == senderName and not self.voting:
       if self.playerList[sender] and self.currentVote == None and not self.changeNextRound:
         if not self.playerList[sender].isRtl:
@@ -247,7 +249,7 @@ class RTL(object):
       lineParse = line.split(':')
       sender = lineParse[0]
       senderName = lineParse[2][1:].strip()
-      print("LOG: %s (client %s) un-voted RTL" % (senderName, sender))
+      print("%s LOG: %s (client %s) un-voted RTL" % (ctime(time()), senderName, sender))
       if self.playerList[sender] and self.playerList[sender].isRtl and self.currentVote == None:
         self.playerList[sender].isRtl = False
         self.rcon.svsay("^6[RTL]^7: %s^7 no longer wants to change Legends teams!" % (senderName))
@@ -286,10 +288,10 @@ class RTL(object):
       # oldName = self.playerList[playerID].name
       # oldIP = self.playerList[playerID].address
       if not playerID in self.playerList:
-        print("LOG: %s connected with id %s" % (playerName, playerID))
+        print("%s LOG: %s connected with id %s" % (ctime(time()), playerName, playerID))
         self.playerList[playerID] = Player(playerID, playerName, playerIP)
       elif self.playerList[playerID].name != playerName and len(playerName) > 15 and playerName.startswith(self.playerList[playerID].name):
-        print("LOG: DETECTED LONG NAME %s" % (playerName))
+        print("%s LOG: DETECTED LONG NAME %s" % (ctime(time()), playerName))
         self.playerList[playerID].name = playerName
       elif self.playerList[playerID].name != playerName:
         # print("WARNING: TWO USERS WERE ASSIGNED ID %s (%s and %s), IGNORING %s'S COMMANDS" % (playerID, self.playerList[playerID].name, playerName, playerName))
@@ -298,7 +300,7 @@ class RTL(object):
         self.playerList[playerID].address = playerIP
     elif lineParse[0] == "ClientDisconnect:":
       playerID = lineParse[1]
-      print("LOG: Player with ID %s disconnected" % (playerID))
+      print("%s LOG: Player with ID %s disconnected" % (ctime(time()), playerID))
       if playerID in self.playerList:
         if self.currentVote and self.playerList[playerID].voteNum:
           self.currentVote.votes[self.playerList[playerID].voteNum].remove(playerID)
@@ -332,7 +334,7 @@ class RTL(object):
       for i in range(0, len(vars), 2):
         playerObject.userinfo[vars[i]] = vars[i+1]
       if playerObject.name != playerObject.userinfo["n"]:
-        print("LOG: DETECTED NAME CHANGE on client %s (from %s to %s)" % (playerID, playerObject.name, playerObject.userinfo["n"]))
+        print("%s LOG: DETECTED NAME CHANGE on client %s (from %s to %s)" % (ctime(time()), playerID, playerObject.name, playerObject.userinfo["n"]))
         playerObject.name = playerObject.userinfo["n"]
 
   def startVote(self, side, choices=None):
@@ -410,14 +412,17 @@ class RTL(object):
     self.populatePlayers()
     self.resetVotes()
     self.refreshChoices()
-    self.currentTeam1 = self.rcon.getTeam1()
-    self.currentTeam2 = self.rcon.getTeam2()
+    while self.currentTeam1 == None or self.currentTeam1 == '':
+      self.currentTeam1 = self.rcon.getTeam1()
+    while self.currentTeam2 == None or self.currentTeam2 == '':
+      self.currentTeam2 = self.rcon.getTeam2()
     self.rcon.say("^6[RTL]^7: Rock The Legends initialized! Have fun!")
     # self.currentMap = self.rcon.getCurrentMap()
     # ignore existing log lines
     with open("C:\Program Files (x86)\Steam\steamapps\common\Jedi Academy\GameData\MBII\server.log") as log:
       for line in log.readlines():
           self.toSeek += len(line)
+    print("%s LOG: Initialization complete! RTL is ready!" % (ctime(time())))
     while True:
       with open("C:\Program Files (x86)\Steam\steamapps\common\Jedi Academy\GameData\MBII\server.log") as log:
         log.seek(self.toSeek)
@@ -647,14 +652,14 @@ class Rcon(object):
 if __name__ == "__main__":
   while True:
     try:
-      rcon = Rcon(("192.168.50.1", 29070), "192.168.50.1", "fuckmylife")
+      rcon = Rcon(("192.168.50.1", 29070), "192.168.50.1", "therealreal")
       rtlInstance = RTL(rcon, voteTime=120)
       rtlInstance.start()
     except KeyboardInterrupt:
       exit(2)
-    except Exception as e:
-      print(f"WARNING: Unexpected error occurred {e}, attempting to restart RTL...")
-      rcon.say("^6[RTL]^7: Unexpected error occurred, restarting RTL...")
+    # except Exception as e:
+    #   print(f"WARNING: Unexpected error occurred {e}, attempting to restart RTL...")
+    #   rcon.say("^6[RTL]^7: Unexpected error occurred, restarting RTL...")
     # rcon = Rcon(("192.168.1.118", 29070), "192.168.1.118", "fuckmylife")
     # rtlInstance = RTL(rcon, voteTime=120)
     # rtlInstance.start()
