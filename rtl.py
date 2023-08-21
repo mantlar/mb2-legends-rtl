@@ -18,7 +18,8 @@ serverTips = [
   "To nominate a team, type '^2!nomteam <teamname> <red/blue>^6' in chat. You can only have 1 nomination for each side.",
   "This server also runs the ^2RTV^6 plugin! Type ^2rtv^6 or ^2!rtv^6 to vote to change the current map!",
   "To get a specific map's FA teams, type '^2!mapteams <mapname>^6' in chat.",
-  "RTL has a Discord! The invite code is ^23WmyjexHKC^6!"
+  "RTL has a Discord! The invite code is ^23WmyjexHKC^6!",
+  "Don't know what to do? Try ^2!help^6 for a list of commands!"
 ]
 
 def get_team_names():
@@ -264,7 +265,7 @@ class RTL(object):
         self.currentVote.votes[voteNum].append(sender)
     elif re.match('\d+:', lineParse[0]) and self.currentVote == None and (lineParse[-3].strip("\"") == "!nomteam" or lineParse[-3].strip("\"") == "!teamnom" or lineParse[-3].strip("\"") == "!nominateteam" or lineParse[-3].strip("\"") == "!teamnominate"):
       lineParse = line.split(":")
-      command = re.match('!nomteam (.*)', lineParse[-1][1:].strip("\"")).group().split()
+      command = re.match('^!nomteam (.*)', lineParse[-1][1:].strip("\"")).group().split()
       if len(command) < 3:
           print("invalid command")
       nomName = command[1]
@@ -278,6 +279,8 @@ class RTL(object):
       self.searchTeams(lineParse[-1].strip("\""))
     elif re.match('\d+:', lineParse[0]) and (lineParse[-2].strip("\"") == '!mapteams' or lineParse[-2].strip("\"") == '!mapteam'):
       self.mapTeams(lineParse[-1].strip("\""))
+    elif re.match('\d+:', lineParse[0]) and lineParse[-1].strip("\"") == '!help':
+      self.rcon.say("^6[RTL]^7: Available commands: !rtl, !unrtl, !nomteam <name> <r/b>, !searchteams <query>, !teamlist <page>, !mapteams <map name>")
     
     elif lineParse[0] == "ClientConnect:":
       regex = re.escape(line)
@@ -300,8 +303,8 @@ class RTL(object):
         self.playerList[playerID].address = playerIP
     elif lineParse[0] == "ClientDisconnect:":
       playerID = lineParse[1]
-      print("%s LOG: Player with ID %s disconnected" % (ctime(time()), playerID))
       if playerID in self.playerList:
+        print("%s LOG: Player with ID %s (%s) disconnected" % (ctime(time()), playerID, self.playerList[playerID].name))
         if self.currentVote and self.playerList[playerID].voteNum:
           self.currentVote.votes[self.playerList[playerID].voteNum].remove(playerID)
         del self.playerList[playerID]
@@ -329,10 +332,14 @@ class RTL(object):
 
     elif lineParse[0] == "ClientUserinfoChanged:":
       playerID = lineParse[1]
-      playerObject = self.playerList[playerID]
+      if self.playerList[playerID]:
+        playerObject = self.playerList[playerID]
+      else:
+        return
       vars = ['n'] + line.split('\\')[1:]   # this is hacky as shit but so is the rest of the script
-      for i in range(0, len(vars), 2):
-        playerObject.userinfo[vars[i]] = vars[i+1]
+      if len(vars) > 1:
+        for i in range(0, len(vars), 2):
+          playerObject.userinfo[vars[i]] = vars[i+1]
       if playerObject.name != playerObject.userinfo["n"]:
         print("%s LOG: DETECTED NAME CHANGE on client %s (from %s to %s)" % (ctime(time()), playerID, playerObject.name, playerObject.userinfo["n"]))
         playerObject.name = playerObject.userinfo["n"]
@@ -616,6 +623,7 @@ class Rcon(object):
   def mapReload(self, mapName):
     """ USE THIS """
     currMap = mapName
+    #self._send(b"\xff\xff\xff\xffrcon %b mbmode 4" % (self.rcon_pwd))
     return self._send(b"\xff\xff\xff\xffrcon %b map %b" % (self.rcon_pwd, currMap))
 
   def getCurrentMap(self):
@@ -647,6 +655,9 @@ class Rcon(object):
         newPlayer = Player(newPlayerID, newPlayerName, newPlayerAddress)
         players.append(newPlayer)
     return players, currentMap
+  
+  def getAuthenticity(self):
+    response = self._send(  )
 
 
 if __name__ == "__main__":
